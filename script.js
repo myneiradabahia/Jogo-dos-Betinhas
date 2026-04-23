@@ -33,3 +33,18 @@ function handleMove(cell, index) {
             tempBoard[index] = player;
             return checkWin(tempBoard, player);
         }
+
+function setGameMode(mode) {
+    if (mode === 'convidar') {
+        window.open('https://github.com/myneiradabahia/Jogo-dos-Betinhas', '_blank');
+    }
+}
+
+function setGameMode(mode) {
+    if (mode === 'convidar') {
+        const urlJogo = 'https://myneiradabahia.github.io/Jogo-dos-Betinhas/';
+        const mensagem = encodeURIComponent('Ei, vem jogar o Jogo dos Betinhas comigo! ' + urlJogo);
+        
+        window.open('https://api.whatsapp.com/send?text=' + mensagem, '_blank');
+    }
+}
