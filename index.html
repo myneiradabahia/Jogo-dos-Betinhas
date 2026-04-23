@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="script.js"></script>
+    <link rel="icon" type="image/png" href="./betapeixe.png">
+    <title>Jogo dos Betinhas</title>
+    <style>
+        body {
+            background-color: #000000;
+            color: #ffffff;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+        h1 { margin-bottom: 10px; color: #ec0ce1; text-transform: uppercase; letter-spacing: 2px; }
+        .controls { display: flex; gap: 10px; margin-bottom: 20px; }
+        .board {
+            display: grid;
+            grid-template-columns: repeat(3, 100px);
+            grid-template-rows: repeat(3, 100px);
+            gap: 10px;
+            background-color: #333;
+            padding: 15px;
+            border-radius: 15px;
+        }
+        .cell {
+            width: 100px;
+            height: 100px;
+            background-color: #1e1e1e;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .cell:hover { background-color: #2a2a2a; border: 2px solid #00f2fe; }
+        .cell.x { color: #ff4b4b; text-shadow: 0 0 10px #ff4b4b; }
+        .cell.o { color: #00f2fe; text-shadow: 0 0 10px #00f2fe; }
+        #status {
+            margin: 15px 0;
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #00f2fe;
+            min-height: 1.5em;
+        }
+        .score-container {
+            margin: 15px 0;
+            background: #4a01f3;
+            padding: 10px 20px;
+            border-radius: 8px;
+        }
+        button {
+            background-color: #e4119d;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 5px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .reset-btn { background-color: #333; margin-top: 20px; }
+    </style>
+</head>
+<body>
+
+    <h1>Jogo dos Betinhas</h1>
+
+    <div class="controls">
+        <button onclick="setGameMode('ia')">Jogar contra IA</button>
+        <button onclick="setGameMode('convidar')">Convidar Amigo</button>
+        <button onclick="setGameMode('amigo')">Jogar com Amigo</button>
+
+    </div>
+
+    <div id="status">Vez do X</div>
+
+    <div class="board" id="board">
+        <div class="cell" onclick="handleMove(this, 0)"></div>
+        <div class="cell" onclick="handleMove(this, 1)"></div>
+        <div class="cell" onclick="handleMove(this, 2)"></div>
+        <div class="cell" onclick="handleMove(this, 3)"></div>
+        <div class="cell" onclick="handleMove(this, 4)"></div>
+        <div class="cell" onclick="handleMove(this, 5)"></div>
+        <div class="cell" onclick="handleMove(this, 6)"></div>
+        <div class="cell" onclick="handleMove(this, 7)"></div>
+        <div class="cell" onclick="handleMove(this, 8)"></div>
+    </div>
+
+    <div class="score-container">
+        Placar - X: <span id="scoreX">0</span> | O: <span id="scoreO">0</span> | Empate: <span id="scoreempate">0</span>
+    </div>
+
+    <button class="reset-btn" onclick="resetGame(true)">Zerar Tudo</button>
+
+    <script>
+        let board = ["", "", "", "", "", "", "", "", ""];
+        let currentPlayer = "X";
+        let isGameActive = true;
+        let mode = "ia";
+        let scores = { X: 0, O: 0, empate: 0 };
+
+        const statusDisplay = document.getElementById('status');
+        const winConditions = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+
+        function setGameMode(m) {
+            mode = m;
+            resetGame(true);
+        }
+
+        function handleMove(cell, index) {
+            if (board[index] !== "" || !isGameActive) return;
+
+            executeMove(index, currentPlayer);
+
+            if (isGameActive && mode === "ia") {
+                isGameActive = false;
+                statusDisplay.innerText = "IA pensando...";
+                setTimeout(aiTurn, 300);
+            } else if (isGameActive && mode === "amigo") {
+                currentPlayer = currentPlayer === "X" ? "O" : "X";
+                statusDisplay.innerText = `Vez do Jogador ${currentPlayer}`;
+            }
+        }
+
+        function aiTurn() {
+            let bestMove = getBestMove();
+            if (bestMove !== null) {
+                executeMove(bestMove, "O");
+            }
+            if (!checkWin(board, "X") && !checkWin(board, "O") && board.includes("")) {
+                isGameActive = true;
+                statusDisplay.innerText = "Sua vez (X)";
+            }
+        }
+
+        function executeMove(index, player) {
+            board[index] = player;
+            const cells = document.querySelectorAll('.cell');
+            cells[index].innerText = player;
+            cells[index].classList.add(player.toLowerCase(), 'taken');
+
+            if (checkWin(board, player)) {
+                statusDisplay.innerText = `Jogador ${player} venceu!`;
+                scores[player]++;
+                document.getElementById(`score${player}`).innerText = scores[player];
+                isGameActive = false;
+                setTimeout(() => resetGame(false), 2000);
+            } else if (!board.includes("")) {
+                statusDisplay.innerText = "Empate!";
+                scores.empate++;
+                document.getElementById('scoreempate').innerText = scores.empate;
+                isGameActive = false;
+                setTimeout(() => resetGame(false), 2000);
+            }
+        }
+
+        function resetGame(hardReset) {
+            board = ["", "", "", "", "", "", "", "", ""];
+            currentPlayer = "X";
+            isGameActive = true;
+            statusDisplay.innerText = "Vez do X";
+            if (hardReset) {
+                scores = { X: 0, O: 0, empate: 0 };
+                document.getElementById('scoreX').innerText = "0";
+                document.getElementById('scoreO').innerText = "0";
+                document.getElementById('scoreempate').innerText = "0";
+            }
+            document.querySelectorAll('.cell').forEach(c => {
+                c.innerText = "";
+                c.className = "cell";
+            });
+        }
+
+        function checkWin(b, p) {
+            return winConditions.some(comb => comb.every(i => b[i] === p));
+        }
+
+        function getBestMove() {
+            let bestVal = -1000;
+            let move = null;
+            for (let i = 0; i < 9; i++) {
+                if (board[i] === "") {
+                    board[i] = "O";
+                    let moveVal = minimax(board, 0, false);
+                    board[i] = "";
+                    if (moveVal > bestVal) {
+                        move = i;
+                        bestVal = moveVal;
+                    }
+                }
+            }
+            return move;
+        }
+
+        function minimax(b, depth, isMax) {
+            if (checkWin(b, "O")) return 10 - depth;
+            if (checkWin(b, "X")) return depth - 10;
+            if (!b.includes("")) return 0;
+
+            if (isMax) {
+                let best = -1000;
+                for (let i = 0; i < 9; i++) {
+                    if (b[i] === "") {
+                        b[i] = "O";
+                        best = Math.max(best, minimax(b, depth + 1, false));
+                        b[i] = "";
+                    }
+                }
+                return best;
+            } else {
+                let best = 1000;
+                for (let i = 0; i < 9; i++) {
+                    if (b[i] === "") {
+                        b[i] = "X";
+                        best = Math.min(best, minimax(b, depth + 1, true));
+                        b[i] = "";
+                    }
+                }
+                return best;
+            }
+        }
+    </script>
+</body>
+</html>
