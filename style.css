@@ -13,7 +13,7 @@ body {
 
 h1 {
     margin-bottom: 10px;
-    color: #ec0ce1;
+    color: #dc8260;
     text-transform: uppercase;
     letter-spacing: 2px;
 }
@@ -48,8 +48,8 @@ h1 {
     border: 2px solid #00f2fe;
 }
 
-.cell.x { color: #ff4b4b; }
-.cell.o { color: #00f2fe; }
+.cell.x { color: #eda953; }
+.cell.o { color: 3b3843; }
 
 #status {
     margin: 15px 0;
